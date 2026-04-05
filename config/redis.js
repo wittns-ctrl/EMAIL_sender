@@ -1,11 +1,10 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import redis from 'ioredis';
-import APIError from '../utils/class.js'
 
 export const Redis = new redis({
     host: process.env.HOST,
-    port: process.env.PORT
+    port: process.env.PORTm
 })
 
 Redis.on("connect",()=>{

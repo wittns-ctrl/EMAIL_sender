@@ -13,14 +13,14 @@ export const register = async(req,res)=> {
     try{
     const email_Valid = validator.isEmail(email)
     if(!email_Valid){
-        return  new APIError("wrong email synthax",400)
+        throw  new APIError("wrong email synthax",400)
     }
 
     const domain = email.split("@")[1]
     const records = await dns.resolveMx(domain)
 
-    if(records.lenght === 0){
-        return new APIError("domain not does not contain mx records",400)
+    if(records.length === 0){
+        throw new APIError("domain not does not contain mx records",400)
     }
 
     const apikey = process.env.MAILBOXLAYERAPIKEY
@@ -36,13 +36,15 @@ export const register = async(req,res)=> {
     await Redis.set(`otp:${email}`,userData,'EX',300)
 
     await sendEmail(email,otp)
+
+    res.status(200).json({message:"check OTP send to your email "})
     }
     else {
         throw new APIError("email verification failed via API",404)
     }
 
     }catch(error){
-
+    throw new APIError("registration error:",error.message)
     }
 }
 
