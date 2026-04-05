@@ -22,16 +22,28 @@ export const register = async(req,res)=> {
     if(records.lenght === 0){
         return new APIError("domain not does not contain mx records",400)
     }
+
+    const apikey = process.env.MAILBOXLAYERAPIKEY
+    const url = `https://apilayer.net/api/check?access_key=${apikey}&email=${email}`
+    const datum = await axios.get(url)
+    if(datum.data.mx_found && datum.data.smtp_check){
+
     const hashedPassword = await bcrypt.hash(password,10);
     const otp = crypto.randomInt(100000,999999).toString()
 
     const userData = JSON.stringify({password:hashedPassword,otp})
 
-    await Redis.set(`otp:${email}`,otp,'EX',300)
+    await Redis.set(`otp:${email}`,userData,'EX',300)
 
     await sendEmail(email,otp)
+    }
+    else {
+        throw new APIError("email verification failed via API",404)
+    }
 
     }catch(error){
 
     }
 }
+
+export default register

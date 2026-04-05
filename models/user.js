@@ -18,3 +18,5 @@ const userSchema = new mongoose.Schema({
 },{timestamp:true})
 
 export const User = mongoose.model('email',userSchema)
+
+export default User
