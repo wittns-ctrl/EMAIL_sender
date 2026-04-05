@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 import redis from 'ioredis';
 
-const Redis = new redis({
+export const Redis = new redis({
     host: process.env.HOST,
     port: process.env.PORT
 })
@@ -12,4 +12,5 @@ Redis.on("connect",()=>{
 })
 Redis.on("error",(err)=>{
     console.error("redis connection error:",err.message)
+    res.status(500).send("server error")
 })
