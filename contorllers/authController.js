@@ -44,8 +44,38 @@ export const register = async(req,res)=> {
     }
 
     }catch(error){
-    throw new APIError("registration error:",error.message)
+    throw new APIError("verification error",500)
     }
 }
 
-export default register
+
+
+export const verifyotp = async(req,res)=>{
+    try{
+    const {email,otp} = req.body;
+
+    const cached = await Redis.get(`otp:${email}`)
+    
+    if(!cached){
+        throw new APIError("OTP expired or invalid email,please sign up again", 404)
+    }
+
+    const{password:hashedpassword,otp: storedOtp} = JSON.parse(cached)
+
+    if(otp !== storedOtp){
+        throw new APIError("incorrect OPT,please sign up again",404)
+    }
+
+    const newUser = await User.create({
+        email,
+        password: hashedpassword,
+        isValid: true
+    })
+
+    await Redis.del(`otp:${email}`)
+
+    res.status(201).json({success: true,user:newUser})
+}catch(error){
+    throw new APIError(error.message,400)
+}
+}
