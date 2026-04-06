@@ -104,7 +104,35 @@ export const forgotPassword = async(req,res)=>{
 
         await user.save({validateBeforeSave : false})
         res.status(500).json({message: error.message})
-        console.error("error message:",error.message)
+        console.error("forgot password error :",error.message)
     }
 }
 
+
+export const resetPassword = async(req,res)=>{
+    const {password} = req.body
+    const {token} = req.params
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
+    const user = await User.findOne({
+    PasswordResetToken: hashedToken,
+    PasswordResetExpires: { $gt: Date.now()}
+    })
+    try{
+        if(!user){
+            throw new APIError("time expired , go back to forgot password",404)
+        }
+    user.password = password
+
+   user.PasswordResetExpires = undefined
+   user.PasswordResetToken = undefined
+
+   await user.save()
+
+   res.status(200).json({message:"account verified successfully"})
+    }catch(error){
+        user.PasswordResetExpires = undefined
+        user.PasswordResetToken = undefined
+        console.log("resetpassword error:",error.message)
+        res.status(500).json({message:error.message})
+    }
+}

@@ -16,7 +16,7 @@ try{
     const mailOptions = {
         from :process.env.EMAIL,
         to :Email,
-        subject: "otp verification code",
+        subject: "account email",
         text: `message: ${otp}`,
         replyTo: process.env.EMAIL
     }
