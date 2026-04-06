@@ -79,3 +79,32 @@ export const verifyotp = async(req,res)=>{
     throw new APIError(error.message,400)
 }
 }
+
+
+export const forgotPassword = async(req,res)=>{
+    const {email} = req.body
+    const user = await User.findOne({email})
+    try{
+    
+     if(!user){
+        throw new APIError("user not found, please sign up",404)
+     }
+     const resetToken = user.createPasswordResetToken()
+
+     await user.save({validateBeforeSave : false})
+
+     const url = `${req.protocol}://${req.get('host')}/api/resetPassword/${resetToken}`
+
+     await sendEmail(email,url)
+
+     res.status(201).json({message: "link send via email successfully"})
+    }catch(error){
+        user.PasswordResetToken = undefined
+        user.PasswordResetExpires = undefined
+
+        await user.save({validateBeforeSave : false})
+        res.status(500).json({message: error.message})
+        console.error("error message:",error.message)
+    }
+}
+

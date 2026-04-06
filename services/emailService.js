@@ -17,7 +17,7 @@ try{
         from :process.env.EMAIL,
         to :Email,
         subject: "otp verification code",
-        text: `YOUR OTP IS ${otp}`,
+        text: `message: ${otp}`,
         replyTo: process.env.EMAIL
     }
 
