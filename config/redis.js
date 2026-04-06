@@ -4,7 +4,8 @@ import redis from 'ioredis';
 
 export const Redis = new redis({
     host: process.env.HOST,
-    port: process.env.PORTm
+    port: process.env.PORTm,
+    maxRetriesPerRequest: null
 })
 
 Redis.on("connect",()=>{

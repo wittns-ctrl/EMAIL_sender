@@ -1,10 +1,9 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import nodemailer from 'nodemailer'
-import APIError from '../utils/class.js'
+import {Worker} from 'bullmq'
+import REDIS from '../config/redis.js'
 
-export const sendEmail = async(Email,otp) => {
-try{
     const transporter = nodemailer.createTransport({
         service:'gmail',
         auth:{
@@ -12,19 +11,30 @@ try{
             pass:process.env.APP_PASSWORD
         }
     })
+const emailWorker = new Worker('email-queue',async(job)=>{
+  const {to,subject,body} = job.data;
+  console.log(`processing job ${job.id} for ${to}`)
 
     const mailOptions = {
         from :process.env.EMAIL,
-        to :Email,
-        subject: "account email",
-        text: `message: ${otp}`,
+        to,
+        subject,
+        text: body,
         replyTo: process.env.EMAIL
     }
-
     await transporter.sendMail(mailOptions)
-}catch(error){
-  throw  new APIError("we have problems with sending email",500)
+    return{status: 'sent'}
+},
+{
+    connection:REDIS,
+    concurrency: 10
 }
-}
+)
 
-export default sendEmail
+emailWorker.on('failer',(job,err)=>{
+    console.error(`rror on ${job.id}`,err.message)
+})
+
+
+
+

@@ -6,7 +6,7 @@ import User from '../models/user.js'
 import validator from 'validator'
 import APIError from '../utils/class.js'
 import Redis from '../config/redis.js'
-import sendEmail from '../services/emailService.js'
+import emailqueue from '../config/emailQueue.js'
 
 export const register = async(req,res)=> {
     const {email,password} = req.body;
@@ -35,9 +35,18 @@ export const register = async(req,res)=> {
 
     await Redis.set(`otp:${email}`,userData,'EX',300)
 
-    await sendEmail(email,otp)
+    await emailqueue.add('otp message',{
+        to:email,
+        subject:"OTP message",
+        body:otp
+    },
+    {
+        attemps: 3,
+        backoff: {type: 'exponential', delay: 1000}
+    }
+)
 
-    res.status(200).json({message:"check OTP send to your email "})
+    res.status(202).json({message:"check OTP send to your email "})
     }
     else {
         throw new APIError("email verification failed via API",404)
@@ -95,7 +104,16 @@ export const forgotPassword = async(req,res)=>{
 
      const url = `${req.protocol}://${req.get('host')}/api/resetPassword/${resetToken}`
 
-     await sendEmail(email,url)
+     await emailqueue.add('reset password',{
+        to:email,
+        subject:'reset password',
+        body:url
+     },
+    
+    {
+        attempts: 3,
+        backoff: {type: 'exponential', delay:1000}
+    })
 
      res.status(201).json({message: "link send via email successfully"})
     }catch(error){
