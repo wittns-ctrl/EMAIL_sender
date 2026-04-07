@@ -13,6 +13,7 @@ import REDIS from '../config/redis.js'
     })
 const emailWorker = new Worker('email-queue',async(job)=>{
   const {to,subject,body} = job.data;
+  console.log(`${job.name}`)
   console.log(`processing job ${job.id} for ${to}`)
 
     const mailOptions = {
@@ -27,12 +28,12 @@ const emailWorker = new Worker('email-queue',async(job)=>{
 },
 {
     connection:REDIS,
-    concurrency: 10
+    concurrency: 1
 }
 )
 
 emailWorker.on('failer',(job,err)=>{
-    console.error(`rror on ${job.id}`,err.message)
+    console.error(`error on ${job.id}`,err.message)
 })
 
 

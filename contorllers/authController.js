@@ -104,7 +104,7 @@ export const forgotPassword = async(req,res)=>{
 
      const url = `${req.protocol}://${req.get('host')}/api/resetPassword/${resetToken}`
 
-     await emailqueue.add('reset password',{
+     await emailqueue.add('reset_password',{
         to:email,
         subject:'reset password',
         body:url
